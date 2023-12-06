@@ -2,7 +2,8 @@ import express from 'express'
 import fetch from 'node-fetch'
 import morgan from 'morgan'
 
-import { Seat } from './seat'
+
+import {Resp} from './response'
 
 const port = 8083
 
@@ -14,31 +15,14 @@ app.post("/reserve", async (req, res) => {
   const { body } = req
   const seatCount = body.count
   const trainId = body.train_id
+  let rep = new Resp(seatCount,trainId)
 
-  // Step 1: get a booking reference
-  let response = await fetch("http://localhost:8082/booking_reference")
-  const bookingReference = await response.text()
-
-  // Step 2: fetch train data
-  response = await fetch(`http://localhost:8081/data_for_train/${trainId}`)
-  const train = await response.json()
-  const seatsInTrain: Seat[] = Object.values(train.seats)
-
-  // TODO: do not hard-code coach number
-  const availableSeats = seatsInTrain.filter(s => s.coach === "A").filter(s => !s.booking_reference)
-  // Step 4: make reservation
-  const toReserve = availableSeats.slice(0, seatCount)
-  const seatIds = toReserve.map(s => `${s.seat_number}${s.coach}`)
-  const reservation = {
-    booking_reference: bookingReference,
-    seats: seatIds,
-    train_id: trainId
-  }
-  response = await fetch(`http://localhost:8081/reserve`, {
+  let response = await fetch(`http://localhost:8081/reserve`, {
     method: 'POST',
-    body: JSON.stringify(reservation),
+    body: JSON.stringify(rep),
     headers: { 'Content-Type': 'application/json' }
   })
+
   const status = response.status
   if (status != 200) {
     res.status(500)
@@ -48,7 +32,7 @@ app.post("/reserve", async (req, res) => {
   }
 
   // Step 5: send back the reservation that was made
-  res.send(reservation)
+  res.send(rep)
 })
 
 
