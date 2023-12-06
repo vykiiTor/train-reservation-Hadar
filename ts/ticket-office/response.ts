@@ -2,6 +2,8 @@ import express from 'express'
 import fetch from 'node-fetch'
 import morgan from 'morgan'
 import { Seat } from './seat'
+
+//cette partie la reste dans app en fait
 class Resp{
     private count;
     private trainId;
@@ -19,7 +21,7 @@ class Resp{
         const train = await response.json();
         const seatsInTrain: Seat[] = Object.values(train.seats);
   
-        // TODO: Avoid hard-coding coach number
+        // sauf ici ca c'est a extraire 
         const availableSeats = seatsInTrain.filter(s => s.coach === 'A').filter(s => !s.booking_reference);
   
         const toReserve = availableSeats.slice(0, this.count);
